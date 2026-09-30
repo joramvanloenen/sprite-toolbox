@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12161d">
+  <meta name="description" content="Extract, clean and arrange sprites. Build transparent power-of-two atlases directly in your browser.">
+  <title>Sprite Toolbox</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Sprite Toolbox home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>SPRITE <strong>TOOLBOX</strong></span></a>
+    <span class="local-note">Your images stay on your device</span>
+    <button id="export-atlas" class="button primary" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></svg>Export PNG</button>
+  </header>
+
+  <main class="workspace">
+    <aside class="panel library-panel">
+      <div class="panel-heading"><h1>Sprites</h1><span id="sprite-count" class="pill">0</span></div>
+      <div class="import-actions">
+        <button class="button" id="import-atlas"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Extract an atlas</button>
+        <button class="button" id="import-pngs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add PNG sprites</button>
+      </div>
+      <input id="atlas-file" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <input id="png-files" type="file" accept="image/png,image/webp" multiple hidden>
+      <div id="library-empty" class="empty-library"><span class="empty-grid" aria-hidden="true">▦</span><h2>Your sprite collection</h2><p>Extract objects from a sheet or add individual PNGs.</p><p class="muted">Drop files anywhere to import.</p></div>
+      <div id="sprite-list" class="sprite-list" aria-label="Sprite collection"></div>
+      <div id="library-tools" class="library-tools" hidden><button id="fit-all" class="text-button">Fit all to cells</button><button id="clear-all" class="text-button danger">Clear all</button></div>
+      <div class="library-footer"><span class="keycap">drag</span> Move sprites in the preview<br><span class="keycap">↔</span> Drag tiles here to reorder</div>
+    </aside>
+
+    <section class="editor" aria-label="Sprite workspace">
+      <div class="editor-toolbar">
+        <div class="tabs" role="tablist" aria-label="Editor view"><button id="tab-atlas" role="tab" aria-selected="true" aria-controls="atlas-view" class="active">Atlas</button><button id="tab-source" role="tab" aria-selected="false" aria-controls="source-view">Extract <span id="source-dot" hidden>•</span></button><button id="tab-foliage" role="tab" aria-selected="false" aria-controls="foliage-view">Foliage <span class="tab-badge">LAB</span></button></div>
+        <span id="view-info" class="mono">1024 × 1024</span>
+      </div>
+      <div id="atlas-view" role="tabpanel" aria-labelledby="tab-atlas" class="view">
+        <div class="view-toolbar">
+          <div class="preview-options"><label class="check"><input id="show-grid" type="checkbox" checked>Grid</label><label class="check"><input id="pixel-mode" type="checkbox">Pixel art</label></div>
+          <div class="canvas-options"><button id="preview-bg" class="swatch-button" aria-label="Change preview background" title="Preview background: checkerboard"><span></span></button><label class="zoom-control">Zoom<select id="zoom"><option value="fit">Fit</option><option value="0.5">50%</option><option value="1">100%</option><option value="2">200%</option></select></label></div>
+        </div>
+        <div id="atlas-stage" class="canvas-stage"><div id="atlas-wrap" class="canvas-wrap checker"><canvas id="atlas-canvas" width="1024" height="1024" aria-label="Atlas preview. Select a sprite, then drag to reposition; drag its corner handle to scale." tabindex="0"></canvas><div id="atlas-empty" class="canvas-empty"><span class="crosshair" aria-hidden="true">＋</span><h2>Make room for your sprites.</h2><p>Start with an atlas or a handful of PNGs.</p><div><button class="button primary" id="empty-import">Extract an atlas</button><button class="button" id="empty-pngs">Add PNGs</button></div><span class="mono muted">RGBA · POWER OF TWO · NO UPLOADS</span></div></div></div>
+        <div class="stage-footer"><span id="atlas-status">4 × 4 grid · 256 px cells</span><span>Preview guides are excluded from export</span></div>
+      </div>
+      <div id="source-view" role="tabpanel" aria-labelledby="tab-source" class="view" hidden>
+        <div class="view-toolbar"><div class="tabs small" role="group" aria-label="Source preview"><button id="source-clean" class="active" aria-pressed="true">Cleaned</button><button id="source-original" aria-pressed="false">Original</button></div><button id="pick-color" class="button compact" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-3 3-5-5Zm-1 4L4 18l-1 3 3-1L17 9M11 5l8 8"/></svg>Pick color</button></div>
+        <div id="source-stage" class="canvas-stage"><div id="source-wrap" class="canvas-wrap checker"><canvas id="source-canvas" width="1024" height="1024" aria-label="Source atlas with detected sprite bounds" tabindex="0"></canvas><div id="source-empty" class="canvas-empty"><h2>Separate sprites from their background.</h2><p>Open a sheet to detect its objects and clean the edges.</p><button class="button primary" id="source-import">Open atlas</button></div></div></div>
+        <div class="stage-footer"><span id="source-status">No source image</span><span id="source-hint">Pick a background color from the image</span></div>
+      </div>
+      <div id="foliage-view" role="tabpanel" aria-labelledby="tab-foliage" class="view" hidden>
+        <div class="view-toolbar"><span class="foliage-preview-label">Live foliage preview</span><div class="canvas-options"><button id="foliage-bg" class="swatch-button" aria-label="Change foliage preview background" title="Preview background: checkerboard"><span></span></button><button id="foliage-random" class="button compact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3l12 10h3M3 17h3L18 7h3m-3-3 3 3-3 3m0 4 3 3-3 3"/></svg>New seed</button></div></div>
+        <div id="foliage-stage" class="canvas-stage"><div id="foliage-wrap" class="canvas-wrap checker"><canvas id="foliage-canvas" width="512" height="512" aria-label="Procedural foliage sprite preview with transparent background"></canvas></div></div>
+        <div class="stage-footer"><span id="foliage-status">512 × 512 · transparent RGBA</span><span>Seeded shapes · spherical shading</span></div>
+      </div>
+    </section>
+
+    <aside class="panel inspector-panel">
+      <section id="atlas-settings" class="inspector-section">
+        <div class="section-heading"><h2>Atlas setup</h2><span class="eyebrow">OUTPUT</span></div>
+        <label class="field">Sheet size<select id="atlas-size"><option value="256">256 × 256</option><option value="512">512 × 512</option><option value="1024" selected>1024 × 1024</option><option value="2048">2048 × 2048</option><option value="4096">4096 × 4096</option></select></label>
+        <div class="field-row"><label class="field">Columns<input id="columns" type="number" min="1" max="32" value="4"></label><label class="field">Rows<input id="rows" type="number" min="1" max="32" value="4"></label></div>
+        <label class="field inline">Cell padding <span class="number-unit"><input id="padding" type="number" min="0" max="64" value="4"><span>px</span></span></label>
+        <p id="capacity-info" class="helper">16 slots available</p>
+      </section>
+      <section id="sprite-settings" class="inspector-section">
+        <div class="section-heading"><h2>Selected sprite</h2><span id="selected-slot" class="eyebrow">—</span></div>
+        <p id="selection-empty" class="helper">Select a sprite to adjust its position and scale.</p>
+        <div id="selection-controls" hidden>
+          <div id="selected-preview" class="selected-preview checker"><canvas id="sprite-preview" width="224" height="132"></canvas></div>
+          <label class="field">Name<input id="sprite-name" type="text" maxlength="80" spellcheck="false"></label>
+          <p id="sprite-dimensions" class="helper mono"></p>
+          <label class="field inline">Scale <span class="number-unit"><input id="scale-number" type="number" min="5" max="400" step="1" value="100"><span>%</span></span></label>
+          <input id="scale-range" class="range" type="range" min="5" max="300" value="100" aria-label="Sprite scale">
+          <div class="field-row"><label class="field">Offset X <span class="number-unit"><input id="offset-x" type="number" step="1" value="0"><span>px</span></span></label><label class="field">Offset Y <span class="number-unit"><input id="offset-y" type="number" step="1" value="0"><span>px</span></span></label></div>
+          <div class="button-row"><button id="center-sprite" class="button compact">Center</button><button id="fit-sprite" class="button compact">Fit to cell</button></div>
+          <p id="clipping-warning" class="warning" hidden>Sprite extends beyond its cell and will be clipped.</p>
+          <label class="field">Move to slot<select id="move-slot"></select></label>
+          <div class="button-row"><button id="export-sprite" class="button compact">Save sprite</button><button id="remove-sprite" class="button compact danger">Remove</button></div>
+        </div>
+      </section>
+      <section id="extraction-settings" class="inspector-section" hidden>
+        <div class="section-heading"><h2>Remove background</h2><span class="eyebrow">01</span></div>
+        <label class="check spacious"><input id="remove-bg" type="checkbox" checked>Remove background color</label>
+        <label class="field inline">Background <span class="color-field"><input id="bg-color" type="color" value="#ffffff"><span id="color-hex" class="mono">#ffffff</span></span></label>
+        <label class="field inline">Tolerance <output id="tolerance-value">12</output></label><input id="tolerance" class="range" type="range" min="0" max="120" value="12">
+        <label class="field inline">Edge softness <output id="softness-value">18</output></label><input id="softness" class="range" type="range" min="0" max="80" value="18">
+        <label class="field inline">Defringe <output id="defringe-value">2 px</output></label><input id="defringe" class="range" type="range" min="0" max="6" value="2">
+        <label class="check spacious"><input id="protect-enclosed" type="checkbox">Protect enclosed matching colors</label>
+        <p class="helper">Defringe removes background tint from edge pixels. Check the cutout on light and dark backgrounds.</p>
+        <div class="section-heading subsection"><h2>Isolate sprites</h2><span class="eyebrow">02</span></div>
+        <label class="field">Detection<select id="detection"><option value="objects">Automatic objects</option><option value="grid">Source grid</option></select></label>
+        <div id="object-options"><label class="field inline">Minimum object <span class="number-unit"><input id="min-area" type="number" min="1" max="10000" value="16"><span>px</span></span></label><label class="field inline">Join nearby parts <span class="number-unit"><input id="merge-gap" type="number" min="0" max="32" value="2"><span>px</span></span></label><p class="helper">Increase the gap to group detached details. Use a source grid for animation sheets.</p></div>
+        <div id="source-grid-options" class="field-row" hidden><label class="field">Columns<input id="source-columns" type="number" min="1" max="64" value="4"></label><label class="field">Rows<input id="source-rows" type="number" min="1" max="64" value="4"></label></div>
+        <div class="extraction-result"><strong id="detected-count">0 sprites</strong><span>detected</span></div>
+        <button id="extract-sprites" class="button primary full" disabled>Add sprites to atlas</button>
+        <p class="helper">Adding keeps the sprites already in your atlas.</p>
+      </section>
+      <section id="foliage-settings" class="inspector-section" hidden>
+        <div class="section-heading"><h2>Foliage lab</h2><span class="eyebrow">PROCEDURAL</span></div>
+        <label class="field">Shape rules<select id="foliage-kind"><option value="tree">Broadleaf tree</option><option value="pine">Conifer</option><option value="bush">Shrub</option></select></label>
+        <div class="field-row"><label class="field">Seed<input id="foliage-seed" type="number" min="1" max="999999" value="4721"></label><label class="field">Sprite size<select id="foliage-size"><option value="256">256 px</option><option value="512" selected>512 px</option><option value="1024">1024 px</option></select></label></div>
+        <label class="field">Leaf palette<select id="foliage-palette"><option value="woodland">Woodland green</option><option value="sage">Cool evergreen</option><option value="autumn">Golden autumn</option><option value="rust">Copper red</option></select></label>
+        <div class="field-row"><label class="field">Leaf color<input id="foliage-color" type="color" value="#79a83e"></label><label class="field">Trunk color<input id="foliage-trunk-color" type="color" value="#86644a"></label></div>
+        <label class="field inline">Canopy width<output id="foliage-width-value">100%</output></label><input id="foliage-width" class="range" type="range" min="55" max="120" value="100">
+        <label class="field inline">Canopy height<output id="foliage-height-value">100%</output></label><input id="foliage-height" class="range" type="range" min="60" max="120" value="100">
+        <label class="field inline">Leaf clusters<output id="foliage-density-value">65%</output></label><input id="foliage-density" class="range" type="range" min="20" max="100" value="65">
+        <label class="field inline">Brush size<output id="foliage-brush-value">50%</output></label><input id="foliage-brush" class="range" type="range" min="15" max="100" value="50">
+        <label class="field inline">Trunk thickness<output id="foliage-trunk-value">50%</output></label><input id="foliage-trunk" class="range" type="range" min="10" max="100" value="50">
+        <div class="section-heading subsection"><h2>Volume & light</h2><span class="eyebrow">SHADING</span></div>
+        <label class="field">Light direction<select id="foliage-light"><option value="left">Upper left</option><option value="right">Upper right</option><option value="top">Top</option></select></label>
+        <label class="field inline">Volume contrast<output id="foliage-volume-value">70%</output></label><input id="foliage-volume" class="range" type="range" min="20" max="100" value="70">
+        <label class="field inline">Painterly texture<output id="foliage-texture-value">75%</output></label><input id="foliage-texture" class="range" type="range" min="0" max="100" value="75">
+        <p class="helper">Clusters use rounded light and shadow. Brush marks follow each cluster's volume. The same seed keeps the same tree while you tune it.</p>
+        <div class="section-heading subsection"><h2>Use this sprite</h2><span class="eyebrow">RGBA</span></div>
+        <button id="foliage-add" class="button primary full">Add to atlas</button>
+        <button id="foliage-export" class="button full" style="margin-top:10px">Export foliage PNG</button>
+      </section>
+      <section id="export-settings" class="inspector-section">
+        <div class="section-heading"><h2>Export</h2><span class="eyebrow">PNG + JSON</span></div>
+        <label class="field">Filename<input id="filename" type="text" value="sprite-atlas" maxlength="80" spellcheck="false"></label>
+        <label class="field inline">Color bleed <span class="number-unit"><input id="bleed" type="number" min="0" max="8" value="2"><span>px</span></span></label>
+        <p class="helper">Extends RGB into transparent pixels to reduce dark seams with texture filtering. Alpha stays transparent.</p>
+        <button id="export-json" class="button full" disabled>Export frame data</button>
+      </section>
+    </aside>
+  </main>
+  <div id="drop-overlay" class="drop-overlay" hidden><div><span>＋</span><h2>Drop your images</h2><p>One image can be extracted. Multiple PNGs become sprites.</p></div></div>
+  <dialog id="single-import-dialog"><form method="dialog"><h2>How should this image be used?</h2><p id="import-filename"></p><div class="dialog-actions"><button class="button primary" value="atlas">Extract sprites from it</button><button class="button" value="sprite">Add as one sprite</button><button class="text-button" value="cancel">Cancel</button></div></form></dialog>
+  <dialog id="confirm-dialog"><form method="dialog"><h2>Clear all sprites?</h2><p>Your source image will stay open.</p><div class="dialog-actions"><button class="button danger" value="clear">Clear sprites</button><button class="button" value="cancel">Keep them</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
