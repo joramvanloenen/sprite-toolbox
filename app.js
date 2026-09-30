@@ -26,6 +26,7 @@ function syncExtractionLabels() {
 }
 function setView(view) {
   state.view=view;
+  document.body.classList.toggle('editing-foliage',view==='foliage');
   for(const name of ['atlas','source','foliage']) { $('tab-'+name).classList.toggle('active',view===name);$('tab-'+name).setAttribute('aria-selected',String(view===name));$(name+'-view').hidden=view!==name; }
   $('atlas-settings').hidden=view!=='atlas';$('sprite-settings').hidden=view!=='atlas';$('export-settings').hidden=view!=='atlas';$('extraction-settings').hidden=view!=='source';$('foliage-settings').hidden=view!=='foliage';
   if(view==='foliage')updateFoliage();
@@ -276,5 +277,5 @@ $('foliage-random').addEventListener('click',()=>{$('foliage-seed').value=Math.f
 $('foliage-bg').addEventListener('click',()=>{foliageBackground=(foliageBackground+1)%3;$('foliage-wrap').classList.toggle('light',foliageBackground===1);$('foliage-wrap').classList.toggle('dark',foliageBackground===2);$('foliage-bg').title=`Preview background: ${['checkerboard','light','dark'][foliageBackground]}`;});
 $('foliage-add').addEventListener('click',handle(()=>{const config=foliageOptions(),c=newCanvas(config.size,config.size);renderFoliage(c,config);const data=c.getContext('2d').getImageData(0,0,c.width,c.height).data,bounds=trimBounds(data,c.width,c.height);if(!bounds)throw new Error('No visible foliage to add.');addSprites([{name:`${config.kind}_${config.seed}`,width:bounds.width,height:bounds.height,canvas:newCanvas(bounds.width,bounds.height,cropSprite(data,c.width,bounds))}]);}));
 $('foliage-export').addEventListener('click',handle(async()=>{const config=foliageOptions(),c=newCanvas(config.size,config.size);renderFoliage(c,config);const data=c.getContext('2d').getImageData(0,0,c.width,c.height).data;const result=await rpc('export',{buffer:data.buffer,width:c.width,height:c.height,bleed:2,regions:[{x:0,y:0,width:c.width,height:c.height}]},[data.buffer]);download(result.blob,`${config.kind}_${config.seed}.png`);toast('Foliage exported with transparency and clean edges.');}));
-new ResizeObserver(resizePreviews).observe($('editor-toolbar'));window.addEventListener('resize',resizePreviews);
+new ResizeObserver(resizePreviews).observe(document.querySelector('.editor-toolbar'));window.addEventListener('resize',resizePreviews);
 syncAtlasSettings();syncSelection();syncExtractionLabels();setView('atlas');
