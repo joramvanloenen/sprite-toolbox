@@ -105,14 +105,14 @@
         <div class="field-row"><label class="field">Leaf color<input id="foliage-color" type="color" value="#79a83e"></label><label class="field">Trunk color<input id="foliage-trunk-color" type="color" value="#86644a"></label></div>
         <label class="field inline">Canopy width<output id="foliage-width-value">100%</output></label><input id="foliage-width" class="range" type="range" min="55" max="120" value="100">
         <label class="field inline">Canopy height<output id="foliage-height-value">100%</output></label><input id="foliage-height" class="range" type="range" min="60" max="120" value="100">
-        <label class="field inline">Leaf clusters<output id="foliage-density-value">65%</output></label><input id="foliage-density" class="range" type="range" min="20" max="100" value="65">
-        <label class="field inline">Brush size<output id="foliage-brush-value">50%</output></label><input id="foliage-brush" class="range" type="range" min="15" max="100" value="50">
+        <label class="field inline" for="foliage-density">Leaf density<output id="foliage-density-value">65%</output></label><input id="foliage-density" class="range" type="range" min="20" max="100" value="65">
+        <label class="field inline" for="foliage-brush">Leaf size<output id="foliage-brush-value">50%</output></label><input id="foliage-brush" class="range" type="range" min="15" max="100" value="50">
         <label class="field inline">Trunk thickness<output id="foliage-trunk-value">50%</output></label><input id="foliage-trunk" class="range" type="range" min="10" max="100" value="50">
         <div class="section-heading subsection"><h2>Volume & light</h2><span class="eyebrow">SHADING</span></div>
         <label class="field">Light direction<select id="foliage-light"><option value="left">Upper left</option><option value="right">Upper right</option><option value="top">Top</option></select></label>
         <label class="field inline">Volume contrast<output id="foliage-volume-value">70%</output></label><input id="foliage-volume" class="range" type="range" min="20" max="100" value="70">
         <label class="field inline">Painterly texture<output id="foliage-texture-value">75%</output></label><input id="foliage-texture" class="range" type="range" min="0" max="100" value="75">
-        <p class="helper">Clusters use rounded light and shadow. Brush marks follow each cluster's volume. The same seed keeps the same tree while you tune it.</p>
+        <p class="helper">Individual leaves grow along small twigs, with transparent gaps between them. Rounded lighting gives each cluster volume. The same seed keeps the arrangement while you tune it.</p>
         <div class="section-heading subsection"><h2>Use this sprite</h2><span class="eyebrow">RGBA</span></div>
         <button id="foliage-add" class="button primary full">Add to atlas</button>
         <button id="foliage-export" class="button full" style="margin-top:10px">Export foliage PNG</button>
@@ -130,6 +130,6 @@
   <dialog id="single-import-dialog"><form method="dialog"><h2>How should this image be used?</h2><p id="import-filename"></p><div class="dialog-actions"><button class="button primary" value="atlas">Extract sprites from it</button><button class="button" value="sprite">Add as one sprite</button><button class="text-button" value="cancel">Cancel</button></div></form></dialog>
   <dialog id="confirm-dialog"><form method="dialog"><h2>Clear all sprites?</h2><p>Your source image will stay open.</p><div class="dialog-actions"><button class="button danger" value="clear">Clear sprites</button><button class="button" value="cancel">Keep them</button></div></form></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js?v=leaf-clusters-2"></script>
 </body>
 </html>

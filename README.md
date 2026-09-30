@@ -30,9 +30,9 @@ Already transparent sheets preserve their alpha by default. **Protect enclosed m
 
 ## Foliage lab
 
-The dedicated **Foliage** tab creates transparent, game-style assets using deterministic shape rules. Choose a broadleaf tree, conifer or shrub; the seed controls the arrangement and gives reproducible variants. Tune canopy width and height, cluster density, brush size, trunk thickness, leaf and trunk colors, light direction, volume contrast and painterly texture. Four editable palettes cover woodland, evergreen and autumn colors.
+The dedicated **Foliage** tab creates transparent, game-style assets using deterministic shape rules. Choose a broadleaf tree, conifer or shrub; the seed controls the arrangement and gives reproducible variants. Tune canopy width and height, leaf density, leaf size, trunk thickness, leaf and trunk colors, light direction, volume contrast and painterly texture. Four editable palettes cover woodland, evergreen and autumn colors.
 
-The canopy is built from overlapping organic clusters. Each cluster uses spherical surface normals for highlights and shadows; the whole canopy also has volume lighting. Layered tapered brush marks add a painted finish. The trunk and branches use tapered silhouettes, directional shading and bark strokes.
+The canopy is built entirely from individual leaves growing in pairs along short twigs. Broadleaf sprites have pointed, serrated blades, folded shading, fine veins and painterly pigment strokes; conifers use narrow needles. No filled shapes sit behind the leaves. Gaps remain transparent and irregular leaf silhouettes form the canopy edge. Invisible cluster volumes provide spherical lighting, while the whole canopy also has directional volume lighting. Lower leaf density opens up the foliage; leaf size controls the blades independently of texture. The trunk and branches use tapered silhouettes, directional shading and bark strokes.
 
 **Add to atlas** inserts a trimmed copy into a new cell. **Export foliage PNG** saves the complete 256, 512 or 1024 pixel sprite on transparency, with two pixels of transparent RGB bleed. Preview backgrounds are excluded. A new seed changes the tree, while other controls keep its shape stable.
 

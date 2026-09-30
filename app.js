@@ -1,5 +1,5 @@
 import { clamp, guessBackground, trimBounds, cropSprite, cellRect, spriteRect } from './core.js';
-import { renderFoliage, foliagePalettes } from './foliage.js';
+import { renderFoliage, foliagePalettes } from './foliage.js?v=leaf-clusters-2';
 
 const $ = id => document.getElementById(id);
 const state = { sprites:[], selected:null, view:'atlas', size:1024, columns:4, rows:4, padding:4, pixel:false, grid:true, zoom:'fit', background:0, source:null, groups:[], original:false, picking:false, processing:false };

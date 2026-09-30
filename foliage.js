@@ -1,4 +1,4 @@
-// Seeded, rule-based silhouettes with spherical lighting and layered brushwork.
+// Leaf-built foliage. Cluster volumes guide placement and light but are never filled.
 // All drawing is against transparent pixels; there is no background to key out.
 export const foliagePalettes = {
   woodland:{leaf:'#79a83e',trunk:'#86644a'},
@@ -19,43 +19,91 @@ const shade=(base,light,contrast=1,warm=0)=>{
   const amount=clamp(.54+(light-.54)*contrast,0,1);
   return amount<.55?mix(shadow,base,amount/.55):mix(base,highlight,(amount-.55)/.45);
 };
-function blobPath(ctx,cx,cy,rx,ry,random,lobes=6) {
-  const pts=[],phase=random()*Math.PI*2;
-  for(let i=0;i<32;i++) {const a=i*Math.PI*2/32,r=1+Math.sin(a*lobes+phase)*.065+(random()-.5)*.08;pts.push([cx+Math.cos(a)*rx*r,cy+Math.sin(a)*ry*r]);}
-  const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];ctx.beginPath();ctx.moveTo(...mid(pts.at(-1),pts[0]));
-  for(let i=0;i<pts.length;i++)ctx.quadraticCurveTo(...pts[i],...mid(pts[i],pts[(i+1)%pts.length]));ctx.closePath();
-}
-function brushMark(ctx,x,y,size,angle,color,random,opacity=1) {
-  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle=css(color,opacity);
-  // Tapered, slightly uneven strokes rather than circular confetti.
-  ctx.beginPath();ctx.moveTo(-size*.92,-size*.1);ctx.quadraticCurveTo(-size*.45,-size*.59,size*.3,-size*.43);ctx.lineTo(size*(.75+random()*.3),size*.06);ctx.quadraticCurveTo(size*.2,size*.6,-size*.6,size*.36);ctx.closePath();ctx.fill();ctx.restore();
-}
-function drawCluster(ctx,cluster,config,random) {
-  const {x,y,rx,ry,globalLight=.55}=cluster,{leaf,light,volume,texture,brush,pine}=config;
-  const contrast=.45+volume*.85;
-  const top=shade(leaf,clamp(globalLight+.25,0,1),contrast),mid=shade(leaf,globalLight,contrast),bottom=shade(leaf,clamp(globalLight-.28,0,1),contrast);
-  const gradient=ctx.createRadialGradient(x+light[0]*rx*.4,y+light[1]*ry*.45,rx*.02,x+rx*.12,y+ry*.2,Math.max(rx,ry)*1.15);
-  gradient.addColorStop(0,css(top));gradient.addColorStop(.45,css(mid));gradient.addColorStop(1,css(bottom));
-  ctx.save();blobPath(ctx,x,y,rx,ry,random,pine?8:6);ctx.fillStyle=gradient;ctx.fill();ctx.clip();
-  const brushScale=2.7+brush*6.3;
-  const count=Math.round((rx*ry)/(brushScale*brushScale)*(.55+texture*.6));
-  for(let i=0;i<count;i++) {
-    const angle=random()*Math.PI*2,r=Math.sqrt(random())*.99,nx=Math.cos(angle)*r,ny=Math.sin(angle)*r,nz=Math.sqrt(1-r*r);
-    const diffuse=Math.max(0,nx*light[0]+ny*light[1]+nz*light[2]);
-    const illumination=clamp(diffuse*.66+globalLight*.42-.08,0,1),variation=(random()-.5)*(.10+texture*.18);
-    const color=shade(leaf,illumination+variation,contrast,(random()-.5)*.06);
-    const size=brushScale*(.55+random()*.8)*(pine?.72:1);
-    const strokeAngle=pine?-.2+nx*.75:Math.atan2(ny*.65,nx*.75)+Math.PI/2+(random()-.5)*.9;
-    brushMark(ctx,x+nx*rx,y+ny*ry,size,strokeAngle,color,random,.25+texture*.65);
-  }
-  // A few broken light strokes describe the rounded face of each cluster.
-  if(texture>.1) {
-    for(let i=0;i<Math.round(7+texture*9);i++) {
-      const nx=light[0]*(.25+random()*.45)+(random()-.5)*.4,ny=light[1]*(.2+random()*.45)+(random()-.5)*.4;
-      brushMark(ctx,x+nx*rx,y+ny*ry,brushScale*(.7+random()*.6),-.4+random()*.6,shade(leaf,.8+globalLight*.15,contrast),random,.35+texture*.3);
+function leafPath(ctx,length,halfWidth,bend,serrated) {
+  ctx.beginPath();ctx.moveTo(0,0);
+  for(const side of [-1,1]) {
+    for(let k=1;k<=16;k++) {
+      const t=side===-1?k/16:1-k/16;
+      const profile=Math.pow(Math.sin(t*Math.PI),.82);
+      const tooth=serrated?(k%2?.91:1.06):1;
+      ctx.lineTo(t*length,Math.sin(t*Math.PI)*bend+side*halfWidth*profile*tooth);
     }
   }
-  ctx.restore();
+  ctx.closePath();
+}
+
+// Opposite leaf pairs and terminal leaves grow along short sprigs, as in a real
+// leafy branch. The ellipsoid is only a placement rule, never a visible surface.
+export function generateLeafCluster(cluster,config,random) {
+  const {x,y,rx,ry}=cluster,{brush=.5,density=.65,pine=false}=config;
+  const leaves=[],twigs=[],baseLength=9+brush*23;
+  const sprays=clamp(Math.round(rx*ry/(baseLength*baseLength)*(.42+density*.57)),pine?5:3,pine?13:9);
+  const addLeaf=(px,py,angle,length,width,z,variation)=>{
+    const cx=px+Math.cos(angle)*length*.5,cy=py+Math.sin(angle)*length*.5;
+    const nx=clamp((cx-x)/rx,-1,1),ny=clamp((cy-y)/ry,-1,1),nz=Math.sqrt(Math.max(0,1-nx*nx-ny*ny));
+    leaves.push({x:px,y:py,angle,length,halfWidth:width,nx,ny,nz,z:z+nz*.38,variation,bend:(random()-.5)*width*.65,seed:Math.floor(random()*0xffffffff)});
+  };
+  const rotation=random()*Math.PI*2;
+  for(let i=0;i<sprays;i++) {
+    const angle=rotation+i*2.39996323+(random()-.5)*.5,r=.54+random()*.39;
+    const sx=x+(random()-.5)*rx*.36,sy=y+(random()-.5)*ry*.36;
+    const tx=x+Math.cos(angle)*rx*r,ty=y+Math.sin(angle)*ry*r;
+    const dir=Math.atan2(ty-sy,tx-sx),depth=random()*.35;
+    twigs.push({x:sx,y:sy,tx,ty});
+    const pairs=pine?5:3+(random()>.65?1:0);
+    for(let pair=0;pair<pairs;pair++) {
+      const t=.18+pair/(pairs-1)*.63,px=sx+(tx-sx)*t,py=sy+(ty-sy)*t;
+      for(const side of [-1,1]) {
+        const a=dir+side*(pine?.67:1.02)+(random()-.5)*.45;
+        const length=baseLength*(.73+random()*.45)*(pine?.82:1);
+        addLeaf(px,py,a,length,length*(pine?.10:.27+random()*.07),depth+t*.1,(random()-.5)*.13);
+      }
+    }
+    const length=baseLength*(.83+random()*.3);
+    addLeaf(tx,ty,dir+(random()-.5)*.38,length,length*(pine?.11:.30),depth+.15,(random()-.5)*.13);
+  }
+  // Small front sprigs break up the center without a backing disk or ellipse.
+  return {leaves:leaves.sort((a,b)=>a.z-b.z),twigs};
+}
+
+function drawLeaf(ctx,blade,config,globalLight) {
+  const {leaf,light,volume,texture,pine}=config,{x,y,length,halfWidth,bend,angle,nx,ny,nz,variation,seed}=blade;
+  const contrast=.40+volume*.83;
+  const diffuse=Math.max(0,nx*light[0]+ny*light[1]+nz*light[2]);
+  const illumination=clamp(.10+diffuse*.49+globalLight*.49+variation,0,1);
+  const pigment=shade(leaf,illumination,contrast),lit=mix(pigment,[231,228,163],.16),dark=mix(pigment,[25,49,39],.24);
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+  leafPath(ctx,length,halfWidth,bend,!pine);
+  // Each leaf has a softly folded blade. All canopy light is carried by leaves.
+  const gradient=ctx.createLinearGradient(0,-halfWidth,length*.3,halfWidth);
+  gradient.addColorStop(0,css(lit));gradient.addColorStop(.43,css(pigment));gradient.addColorStop(.51,css(mix(pigment,lit,.25)));gradient.addColorStop(1,css(dark));
+  ctx.fillStyle=gradient;ctx.fill();
+  ctx.strokeStyle=css(mix(pigment,[20,46,29],.33),.45);ctx.lineWidth=pine?.25:.45;ctx.stroke();
+  if(!pine) {
+    ctx.save();ctx.clip();
+    const random=seededRandom(seed);
+    if(texture>0) {
+      // Broad, low-contrast pigment strokes stay inside the individual blade.
+      for(let i=0;i<3;i++) {
+        const t=.2+random()*.55,py=(random()-.5)*halfWidth*.9,span=length*(.16+random()*.18);
+        ctx.strokeStyle=css(i%2?mix(pigment,[30,58,31],.28):lit,texture*.34);ctx.lineWidth=halfWidth*(.3+random()*.45);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(t*length,py);ctx.quadraticCurveTo(t*length+span*.3,py-halfWidth*.25,t*length+span,py);ctx.stroke();
+      }
+    }
+    ctx.strokeStyle=css(mix(lit,leaf,.25),.42+.14*texture);ctx.lineWidth=.48;ctx.lineCap='round';
+    for(let i=0;i<4;i++) {const t=.22+i*.16,centerY=Math.sin(t*Math.PI)*bend;
+      for(const side of [-1,1]) {const endT=t+.14;ctx.beginPath();ctx.moveTo(t*length,centerY);ctx.quadraticCurveTo((t+.07)*length,centerY+side*halfWidth*.3,endT*length,Math.sin(endT*Math.PI)*(bend+side*halfWidth*.83));ctx.stroke();}
+    }
+    ctx.restore();
+  }
+  ctx.strokeStyle=css(lit,pine?.5:.7);ctx.lineWidth=pine?.3:.6;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(length*.45,bend*1.4,length*.93,bend*.12);ctx.stroke();ctx.restore();
+}
+
+function drawCluster(ctx,cluster,config,geometry) {
+  const {leaves,twigs}=geometry;
+  ctx.strokeStyle=css(mix(config.trunkColor,config.leaf,.38),.95);ctx.lineWidth=config.pine?.65:.8;ctx.lineCap='round';
+  for(const twig of twigs) {ctx.beginPath();ctx.moveTo(twig.x,twig.y);ctx.lineTo(twig.tx,twig.ty);ctx.stroke();}
+  for(const blade of leaves)drawLeaf(ctx,blade,config,cluster.globalLight);
+  return leaves.length;
 }
 function taperedBranch(ctx,points,width,color,light) {
   const [start,control,end]=points,dx=end[0]-start[0],dy=end[1]-start[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
@@ -107,17 +155,30 @@ function canopyRules(kind,width,height,density,random) {
 export function renderFoliage(canvas,options={}) {
   const {kind='tree',seed=4721,size=512,leafColor='#79a83e',trunkColor='#86644a',width=100,height=100,density=65,brush=50,thickness=50,volume=70,texture=75,lightDirection='left'}=options;
   if(canvas.width!==size)canvas.width=size;if(canvas.height!==size)canvas.height=size;
-  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,size,size);ctx.save();ctx.translate(size*.035,size*.035);ctx.scale(size/512*.93,size/512*.93);
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,size,size);
   const random=seededRandom(seed),light=lightDirection==='right'?[.53,-.67,.52]:lightDirection==='top'?[0,-.8,.6]:[-.53,-.67,.52];
-  const config={kind,leaf:rgb(leafColor),trunkColor:rgb(trunkColor),light,volume:volume/100,texture:texture/100,brush:brush/100,thickness:thickness/100,pine:kind==='pine'};
+  const config={kind,leaf:rgb(leafColor),trunkColor:rgb(trunkColor),light,volume:volume/100,texture:texture/100,brush:brush/100,density:density/100,thickness:thickness/100,pine:kind==='pine'};
   const canopy=canopyRules(kind,width/100,height/100,density/100,random);
+  const geometry=canopy.clusters.map((cluster,index)=>generateLeafCluster(cluster,config,seededRandom((Number(seed)^Math.imul(index+1,0x45d9f3b))>>>0)));
+  // Leaf tips may reach past a placement volume. Fit the actual leaf geometry
+  // with a transparent margin instead of clipping it to an artificial outline.
+  let minX=220,maxX=294,minY=kind==='pine'?118:canopy.y-35,maxY=kind==='bush'?448:470;
+  for(const group of geometry)for(const blade of group.leaves) {
+    const cos=Math.cos(blade.angle),sin=Math.sin(blade.angle),w=blade.halfWidth+Math.abs(blade.bend)+1;
+    for(const lx of [0,blade.length])for(const ly of [-w,w]) {
+      const x=blade.x+cos*lx-sin*ly,y=blade.y+sin*lx+cos*ly;minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
+    }
+  }
+  const fit=Math.min(.93,480/(maxX-minX),480/(maxY-minY)),tx=clamp(17.92,16-fit*minX,496-fit*maxX),ty=clamp(17.92,16-fit*minY,496-fit*maxY);
+  ctx.save();ctx.scale(size/512,size/512);ctx.translate(tx,ty);ctx.scale(fit,fit);
   trunk(ctx,config,canopy,random);
-  for(const cluster of canopy.clusters) {
+  let leafCount=0;
+  for(const [index,cluster] of canopy.clusters.entries()) {
     const nx=clamp((cluster.x-canopy.x)/canopy.rx,-1,1),ny=clamp((cluster.y-canopy.y)/canopy.ry,-1,1),nz=Math.sqrt(Math.max(0,1-nx*nx-ny*ny));
     cluster.globalLight=.22+.72*Math.max(0,nx*light[0]+ny*light[1]+nz*light[2]);
     if(kind==='pine')cluster.globalLight=clamp(cluster.globalLight+(cluster.z%1)*.15,.18,.95);
-    drawCluster(ctx,cluster,config,random);
+    leafCount+=drawCluster(ctx,cluster,config,geometry[index]);
   }
   ctx.restore();
-  return {seed:Number(seed),kind,size,clusters:canopy.clusters.length};
+  return {seed:Number(seed),kind,size,clusters:canopy.clusters.length,leaves:leafCount};
 }
