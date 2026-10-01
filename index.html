@@ -107,7 +107,12 @@
         <label class="field inline">Canopy height<output id="foliage-height-value">100%</output></label><input id="foliage-height" class="range" type="range" min="60" max="120" value="100">
         <label class="field inline" for="foliage-density">Leaf density<output id="foliage-density-value">65%</output></label><input id="foliage-density" class="range" type="range" min="20" max="100" value="65">
         <label class="field inline" for="foliage-brush">Leaf size<output id="foliage-brush-value">50%</output></label><input id="foliage-brush" class="range" type="range" min="15" max="100" value="50">
-        <label class="field inline">Trunk thickness<output id="foliage-trunk-value">50%</output></label><input id="foliage-trunk" class="range" type="range" min="10" max="100" value="50">
+        <div class="section-heading subsection"><h2>Trunk shape</h2><span class="eyebrow">CURVE</span></div>
+        <label class="field inline" for="foliage-trunk">Trunk thickness<output id="foliage-trunk-value">50%</output></label><input id="foliage-trunk" class="range" type="range" min="10" max="100" value="50">
+        <label class="field inline" for="foliage-straightness">Trunk straightness<output id="foliage-straightness-value">75%</output></label><input id="foliage-straightness" class="range" type="range" min="0" max="100" value="75">
+        <label class="field inline" for="foliage-wave-strength">Wave strength<output id="foliage-wave-strength-value">0%</output></label><input id="foliage-wave-strength" class="range" type="range" min="0" max="100" value="0">
+        <label class="field inline" for="foliage-wave-frequency">Wave frequency<output id="foliage-wave-frequency-value">1.5 cycles</output></label><input id="foliage-wave-frequency" class="range" type="range" min="0.5" max="3" step="0.25" value="1.5">
+        <p class="helper">100% straightness removes natural bends. Raise wave strength to add waves; frequency sets how many run along the trunk. Branches follow the curve.</p>
         <div class="section-heading subsection"><h2>Volume & light</h2><span class="eyebrow">SHADING</span></div>
         <label class="field">Light direction<select id="foliage-light"><option value="left">Upper left</option><option value="right">Upper right</option><option value="top">Top</option></select></label>
         <label class="field inline">Volume contrast<output id="foliage-volume-value">70%</output></label><input id="foliage-volume" class="range" type="range" min="20" max="100" value="70">
@@ -130,6 +135,6 @@
   <dialog id="single-import-dialog"><form method="dialog"><h2>How should this image be used?</h2><p id="import-filename"></p><div class="dialog-actions"><button class="button primary" value="atlas">Extract sprites from it</button><button class="button" value="sprite">Add as one sprite</button><button class="text-button" value="cancel">Cancel</button></div></form></dialog>
   <dialog id="confirm-dialog"><form method="dialog"><h2>Clear all sprites?</h2><p>Your source image will stay open.</p><div class="dialog-actions"><button class="button danger" value="clear">Clear sprites</button><button class="button" value="cancel">Keep them</button></div></form></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-  <script type="module" src="./app.js?v=leaf-clusters-2"></script>
+  <script type="module" src="./app.js?v=trunk-shape-3"></script>
 </body>
 </html>

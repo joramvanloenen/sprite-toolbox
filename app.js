@@ -1,5 +1,5 @@
 import { clamp, guessBackground, trimBounds, cropSprite, cellRect, spriteRect } from './core.js';
-import { renderFoliage, foliagePalettes } from './foliage.js?v=leaf-clusters-2';
+import { renderFoliage, foliagePalettes } from './foliage.js?v=trunk-shape-3';
 
 const $ = id => document.getElementById(id);
 const state = { sprites:[], selected:null, view:'atlas', size:1024, columns:4, rows:4, padding:4, pixel:false, grid:true, zoom:'fit', background:0, source:null, groups:[], original:false, picking:false, processing:false };
@@ -265,12 +265,13 @@ document.addEventListener('dragover',event=>{if(event.dataTransfer?.types.includ
 document.addEventListener('drop',handle(async event=>{if(listDrag!==null)return;const files=[...event.dataTransfer.files];if(!files.length)return;event.preventDefault();fileDragDepth=0;$('drop-overlay').hidden=true;if(files.length===1){droppedFile=files[0];$('import-filename').textContent=droppedFile.name;$('single-import-dialog').showModal();}else await importPNGs(files);}));
 $('single-import-dialog').addEventListener('close',handle(async()=>{const file=droppedFile;droppedFile=null;if(!file)return;if($('single-import-dialog').returnValue==='atlas')await loadSource(file);else if($('single-import-dialog').returnValue==='sprite')await importPNGs([file]);}));
 let foliageFrame=0,foliageBackground=0;
-function foliageOptions() {return {kind:$('foliage-kind').value,seed:+$('foliage-seed').value||1,size:+$('foliage-size').value,leafColor:$('foliage-color').value,trunkColor:$('foliage-trunk-color').value,width:+$('foliage-width').value,height:+$('foliage-height').value,density:+$('foliage-density').value,brush:+$('foliage-brush').value,thickness:+$('foliage-trunk').value,volume:+$('foliage-volume').value,texture:+$('foliage-texture').value,lightDirection:$('foliage-light').value};}
+function foliageOptions() {return {kind:$('foliage-kind').value,seed:+$('foliage-seed').value||1,size:+$('foliage-size').value,leafColor:$('foliage-color').value,trunkColor:$('foliage-trunk-color').value,width:+$('foliage-width').value,height:+$('foliage-height').value,density:+$('foliage-density').value,brush:+$('foliage-brush').value,thickness:+$('foliage-trunk').value,straightness:+$('foliage-straightness').value,waveStrength:+$('foliage-wave-strength').value,waveFrequency:+$('foliage-wave-frequency').value,volume:+$('foliage-volume').value,texture:+$('foliage-texture').value,lightDirection:$('foliage-light').value};}
 function updateFoliage() {
-  for(const id of ['width','height','density','brush','trunk','volume','texture'])$('foliage-'+id+'-value').textContent=$('foliage-'+id).value+'%';
+  for(const id of ['width','height','density','brush','trunk','straightness','wave-strength','volume','texture'])$('foliage-'+id+'-value').textContent=$('foliage-'+id).value+'%';
+  $('foliage-wave-frequency-value').textContent=$('foliage-wave-frequency').value+' cycles';
   if(foliageFrame)return;foliageFrame=requestAnimationFrame(()=>{foliageFrame=0;const meta=renderFoliage($('foliage-canvas'),foliageOptions());$('foliage-status').textContent=`${meta.size} × ${meta.size} · seed ${meta.seed} · transparent RGBA`;syncViewInfo();resizePreviews();});
 }
-for(const id of ['kind','seed','size','color','trunk-color','width','height','density','brush','trunk','volume','texture','light'])$('foliage-'+id).addEventListener('input',updateFoliage);
+for(const id of ['kind','seed','size','color','trunk-color','width','height','density','brush','trunk','straightness','wave-strength','wave-frequency','volume','texture','light'])$('foliage-'+id).addEventListener('input',updateFoliage);
 $('foliage-seed').addEventListener('change',()=>{$('foliage-seed').value=clamp(Math.round(+$('foliage-seed').value)||1,1,999999);updateFoliage();});
 $('foliage-palette').addEventListener('change',()=>{const palette=foliagePalettes[$('foliage-palette').value];$('foliage-color').value=palette.leaf;$('foliage-trunk-color').value=palette.trunk;updateFoliage();});
 $('foliage-random').addEventListener('click',()=>{$('foliage-seed').value=Math.floor(Math.random()*999999)+1;updateFoliage();});

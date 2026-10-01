@@ -30,7 +30,9 @@ Already transparent sheets preserve their alpha by default. **Protect enclosed m
 
 ## Foliage lab
 
-The dedicated **Foliage** tab creates transparent, game-style assets using deterministic shape rules. Choose a broadleaf tree, conifer or shrub; the seed controls the arrangement and gives reproducible variants. Tune canopy width and height, leaf density, leaf size, trunk thickness, leaf and trunk colors, light direction, volume contrast and painterly texture. Four editable palettes cover woodland, evergreen and autumn colors.
+The dedicated **Foliage** tab creates transparent, game-style assets using deterministic shape rules. Choose a broadleaf tree, conifer or shrub; the seed controls the arrangement and gives reproducible variants. Tune canopy width and height, leaf density, leaf size, trunk thickness and shape, leaf and trunk colors, light direction, volume contrast and painterly texture. Four editable palettes cover woodland, evergreen and autumn colors.
+
+Under **Trunk shape**, **Trunk straightness** controls natural bends: 100% gives a straight trunk when waves are off. **Wave strength** adds an independent wavy curve (0% disables it), and **Wave frequency** sets the number of cycles along the trunk, from 0.5 to 3. Branches, bark and shading follow the curve. The seed keeps natural bends reproducible, and changing trunk controls preserves the leaf arrangement. The complete curved sprite is fitted within a transparent margin. These settings apply to the live preview, **Add to atlas** and PNG export.
 
 The canopy is built entirely from individual leaves growing in pairs along short twigs. Broadleaf sprites have pointed, serrated blades, folded shading, fine veins and painterly pigment strokes; conifers use narrow needles. No filled shapes sit behind the leaves. Gaps remain transparent and irregular leaf silhouettes form the canopy edge. Invisible cluster volumes provide spherical lighting, while the whole canopy also has directional volume lighting. Lower leaf density opens up the foliage; leaf size controls the blades independently of texture. The trunk and branches use tapered silhouettes, directional shading and bark strokes.
 
